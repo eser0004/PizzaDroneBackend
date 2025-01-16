@@ -2,19 +2,27 @@ package org.example.pizzadronebackend.dto;
 
 public class DroneDTO {
 
+    private Long droneId;
     private String serialUuid;
     private String driftsstatus;
     private double stationLatitude;
     private double stationLongitude;
 
     // Constructor
-    public DroneDTO(String serialUuid, String driftsstatus, double stationLatitude, double stationLongitude) {
+    public DroneDTO(Long droneId, String serialUuid, String driftsstatus, double stationLatitude, double stationLongitude) {
+        this.droneId = droneId;
         this.serialUuid = serialUuid;
         this.driftsstatus = driftsstatus;
         this.stationLatitude = stationLatitude;
         this.stationLongitude = stationLongitude;
     }
 
+    public Long getDroneId() {
+        return droneId;
+    }
+    public void setDroneId(Long droneId) {
+        this.droneId = droneId;
+    }
     // Getters and Setters
     public String getSerialUuid() {
         return serialUuid;

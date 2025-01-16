@@ -15,6 +15,7 @@ public class Station {
     private double longitude; //længdegrad, kommatal
 
     @OneToMany(mappedBy = "station")
+    @JsonBackReference // serialiser relationen
     private List<Drone> droner = new ArrayList<>();
 
     // Tom constructor (kræves af JPA)

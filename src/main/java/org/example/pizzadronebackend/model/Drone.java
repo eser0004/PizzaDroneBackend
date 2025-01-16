@@ -1,5 +1,6 @@
 package org.example.pizzadronebackend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ import java.util.List;
 public class Drone {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "drone_id")
     private Long droneId;
 
     @Column(unique = true)
@@ -18,10 +19,12 @@ public class Drone {
     private String driftsstatus; // "i drift", "ude af drift", "udfaset"
 
     @ManyToOne
+    @JsonBackReference // Ignorer relationen ved serialisering
     private Station station;
 
     @OneToMany(mappedBy = "drone")
-    private List<Levering> leveringer = new ArrayList<>();
+    @JsonIgnore // Undgå cirkulære referencer
+    private List<Levering> leveringer;
 
     // Tom constructor (kræves af JPA)
     public Drone() {}

@@ -1,5 +1,6 @@
 package org.example.pizzadronebackend.service;
 
+
 import jakarta.transaction.Transactional;
 import org.example.pizzadronebackend.dto.DroneDTO;
 import org.example.pizzadronebackend.model.Drone;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,6 +37,7 @@ public class DroneService {
         // Konverter hver Drone til en DroneDTO og returner som liste
         return droner.stream()
                 .map(drone -> new DroneDTO(
+                        drone.getDroneId(),
                         drone.getSerialUuid(),
                         drone.getDriftsstatus(),
                         drone.getStation().getLatitude(),
@@ -45,24 +48,73 @@ public class DroneService {
 
     // Tilføj en ny drone og tilknyt den til en station
     @Transactional
-    public void addDrone() {
-        Station station = stationRepository.findAll().stream()
-                .min(Comparator.comparingInt(s -> s.getDroner().size()))
-                .orElseThrow(() -> new IllegalArgumentException("Ingen stationer fundet."));
+    public Drone addDrone() {
+        Station stationMedFaerrestDroner = stationRepository.findAll()
+                .stream()
+                .min(Comparator.comparing(station -> station.getDroner().size()))
+                .orElseThrow(() -> new IllegalStateException("Ingen stationer tilgængelige"));
 
-        // Generer en tilfældig UUID
-        String randomUuid = UUID.randomUUID().toString();
+        // Find det laveste ledige ID
+        Long lowestAvailableId = findLowestAvailableId();
 
-        // Opret en ny drone
-        Drone newDrone = new Drone(randomUuid, "i drift", station);
+        // Generer UUID i det ønskede format
+        String customUUID = generateCustomUUID();
 
-        // Tilføj dronen til stationens liste
-        station.getDroner().add(newDrone);
-
-        // Gem både dronen og stationen eksplicit
-        droneRepository.save(newDrone);
-        stationRepository.save(station);
+        Drone newDrone = new Drone(customUUID, "i drift", stationMedFaerrestDroner);
+        newDrone.setDroneId(lowestAvailableId); // Sæt det laveste ledige ID
+        return droneRepository.save(newDrone);
     }
+
+    private Long findLowestAvailableId() {
+        List<Long> existingIds = droneRepository.findAll()
+                .stream()
+                .map(Drone::getDroneId)
+                .sorted()
+                .toList();
+
+        Long nextId = 1L;
+        for (Long id : existingIds) {
+            if (!id.equals(nextId)) {
+                break;
+            }
+            nextId++;
+        }
+
+        // Valider, at ID'et ikke allerede findes i databasen
+        if (droneRepository.existsById(nextId)) {
+            throw new IllegalStateException("Det foreslåede ID " + nextId + " findes allerede.");
+        }
+
+        return nextId;
+    }
+
+
+    private String generateCustomUUID() {
+        Random random = new Random();
+        int randomNumber = random.nextInt(9000) + 1000; // Generer et tal mellem 1000 og 9999
+        return "UUID-" + randomNumber;
+    }
+    public void deleteDrone(Long droneId) {
+        if (!droneRepository.existsById(droneId)) {
+            throw new IllegalArgumentException("Drone med ID " + droneId + " findes ikke.");
+        }
+        droneRepository.deleteById(droneId);
+    }
+
+
+    public Drone updateDroneStatus(Long droneId, String newStatus) {
+        Drone drone = droneRepository.findById(droneId)
+                .orElseThrow(() -> new IllegalArgumentException("Drone med ID " + droneId + " findes ikke."));
+
+        if (!List.of("i drift", "ude af drift", "udfaset").contains(newStatus)) {
+            throw new IllegalArgumentException("Ugyldig status: " + newStatus);
+        }
+
+        drone.setDriftsstatus(newStatus);
+        return droneRepository.save(drone);
+    }
+
+
 
 
 
@@ -86,4 +138,6 @@ public class DroneService {
     public void retireDrone(Long droneId) {
         changeDroneStatus(droneId, "udfaset");
     }
+
+
 }

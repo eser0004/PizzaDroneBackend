@@ -10,16 +10,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Optional;
 import java.util.Random;
 
 @Configuration
 public class DataInit implements CommandLineRunner {
+
     @Autowired
-    PizzaRepository pizzaRepo;
+    private PizzaRepository pizzaRepo;
+
     @Autowired
-    StationRepository stationRepo;
+    private StationRepository stationRepo;
+
     @Autowired
-    DroneRepository droneRepo;
+    private DroneRepository droneRepo;
 
     public DataInit(PizzaRepository pizzaRepo, StationRepository stationRepo, DroneRepository droneRepo) {
         this.pizzaRepo = pizzaRepo;
@@ -29,32 +33,58 @@ public class DataInit implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Opret pizzaer
-        pizzaRepo.save(new Pizza("Margherita", 60));
-        pizzaRepo.save(new Pizza("Pepperoni", 75));
-        pizzaRepo.save(new Pizza("Hawaii", 70));
-        pizzaRepo.save(new Pizza("Veggie", 65));
-        pizzaRepo.save(new Pizza("BBQ Chicken", 80));
+        try {
+            System.out.println("DataInit: Initialisering af data...");
 
-        // Opret stationer
-        stationRepo.save(new Station(55.41, 12.34)); // Centrum
-        stationRepo.save(new Station(55.42, 12.33)); // Nær Østerbro
-        stationRepo.save(new Station(55.40, 12.35)); // Nær Amager
+            // Opret pizzaer, hvis der ikke allerede er nogen
+            if (pizzaRepo.count() == 0) {
+                pizzaRepo.save(new Pizza("Margherita", 60));
+                pizzaRepo.save(new Pizza("Pepperoni", 75));
+                pizzaRepo.save(new Pizza("Hawaii", 70));
+                pizzaRepo.save(new Pizza("Veggie", 65));
+                pizzaRepo.save(new Pizza("BBQ Chicken", 80));
+                System.out.println("Pizzaer tilføjet til databasen.");
+            } else {
+                System.out.println("Pizzaer findes allerede i databasen.");
+            }
 
-        // Generer droner
-        generateRandomDrones();
+            // Opret stationer, hvis der ikke allerede er nogen
+            if (stationRepo.count() == 0) {
+                stationRepo.save(new Station(55.41, 12.34)); // Centrum
+                stationRepo.save(new Station(55.42, 12.33)); // Østerbro
+                stationRepo.save(new Station(55.40, 12.35)); // Amager
+                System.out.println("Stationer tilføjet til databasen.");
+            } else {
+                System.out.println("Stationer findes allerede i databasen.");
+            }
+
+            // Generer droner, hvis der ikke allerede er nogen
+            if (droneRepo.count() == 0) {
+                generateRandomDrones();
+                System.out.println("Droner tilføjet til databasen.");
+            } else {
+                System.out.println("Droner findes allerede i databasen.");
+            }
+
+            System.out.println("DataInit: Initialisering færdig.");
+        } catch (Exception e) {
+            System.err.println("Fejl under initialisering af data: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
-    public void generateRandomDrones() {
-        // Find stationer
-        Station station1 = stationRepo.findById(1L).orElseThrow(() -> new IllegalArgumentException("Station 1 findes ikke."));
-        Station station2 = stationRepo.findById(2L).orElseThrow(() -> new IllegalArgumentException("Station 2 findes ikke."));
-        Station station3 = stationRepo.findById(3L).orElseThrow(() -> new IllegalArgumentException("Station 3 findes ikke."));
+    private void generateRandomDrones() {
+        Optional<Station> station1 = stationRepo.findById(1L);
+        Optional<Station> station2 = stationRepo.findById(2L);
+        Optional<Station> station3 = stationRepo.findById(3L);
 
-        // Opret droner med tilpassede UUID'er
-        droneRepo.save(new Drone(generateCustomUUID(), "i drift", station1));
-        droneRepo.save(new Drone(generateCustomUUID(), "ude af drift", station2));
-        droneRepo.save(new Drone(generateCustomUUID(), "udfaset", station3));
+        if (station1.isPresent() && station2.isPresent() && station3.isPresent()) {
+            droneRepo.save(new Drone(generateCustomUUID(), "i drift", station1.get()));
+            droneRepo.save(new Drone(generateCustomUUID(), "ude af drift", station2.get()));
+            droneRepo.save(new Drone(generateCustomUUID(), "udfaset", station3.get()));
+        } else {
+            System.err.println("Stationer mangler i databasen. Kan ikke tilføje droner.");
+        }
     }
 
     private String generateCustomUUID() {

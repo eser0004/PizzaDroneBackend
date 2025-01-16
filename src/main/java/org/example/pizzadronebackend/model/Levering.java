@@ -1,25 +1,32 @@
 package org.example.pizzadronebackend.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 public class Levering {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long leveringId;
-
     private String adresse;
     private LocalDateTime forventetLevering;
     private LocalDateTime faktiskLevering;
 
     @ManyToOne
-    private Pizza pizza;
+    @JsonManagedReference // Serialiser relationen
+    private Drone drone;
 
     @ManyToOne
-    private Drone drone;
+    private Pizza pizza;
+
+    @Column(nullable = false)
+    private int quantity;
+
+    public Levering() {
+
+    }
 
 
     public Long getLeveringId() {
@@ -54,6 +61,14 @@ public class Levering {
         this.faktiskLevering = faktiskLevering;
     }
 
+    public Drone getDrone() {
+        return drone;
+    }
+
+    public void setDrone(Drone drone) {
+        this.drone = drone;
+    }
+
     public Pizza getPizza() {
         return pizza;
     }
@@ -62,11 +77,11 @@ public class Levering {
         this.pizza = pizza;
     }
 
-    public Drone getDrone() {
-        return drone;
+    public int getQuantity() {
+        return quantity;
     }
 
-    public void setDrone(Drone drone) {
-        this.drone = drone;
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
     }
 }
