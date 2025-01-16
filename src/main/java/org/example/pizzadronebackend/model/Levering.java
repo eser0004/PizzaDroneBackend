@@ -16,7 +16,11 @@ public class Levering {
     private LocalDateTime faktiskLevering;
 
     @ManyToOne
+    private Pizza pizza;
+
+    @ManyToOne
     private Drone drone;
+
 
     public Long getLeveringId() {
         return leveringId;
@@ -48,6 +52,14 @@ public class Levering {
 
     public void setFaktiskLevering(LocalDateTime faktiskLevering) {
         this.faktiskLevering = faktiskLevering;
+    }
+
+    public Pizza getPizza() {
+        return pizza;
+    }
+
+    public void setPizza(Pizza pizza) {
+        this.pizza = pizza;
     }
 
     public Drone getDrone() {

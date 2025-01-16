@@ -6,14 +6,20 @@ import org.example.pizzadronebackend.model.Station;
 import org.example.pizzadronebackend.repository.DroneRepository;
 import org.example.pizzadronebackend.repository.PizzaRepository;
 import org.example.pizzadronebackend.repository.StationRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
-@Component
+import java.util.Random;
+
+@Configuration
 public class DataInit implements CommandLineRunner {
-    private final PizzaRepository pizzaRepo;
-    private final StationRepository stationRepo;
-    private final DroneRepository droneRepo;
+    @Autowired
+    PizzaRepository pizzaRepo;
+    @Autowired
+    StationRepository stationRepo;
+    @Autowired
+    DroneRepository droneRepo;
 
     public DataInit(PizzaRepository pizzaRepo, StationRepository stationRepo, DroneRepository droneRepo) {
         this.pizzaRepo = pizzaRepo;
@@ -35,8 +41,25 @@ public class DataInit implements CommandLineRunner {
         stationRepo.save(new Station(55.42, 12.33)); // Nær Østerbro
         stationRepo.save(new Station(55.40, 12.35)); // Nær Amager
 
-        // Opret droner
-        droneRepo.save(new Drone("UUID-1234", "i drift", stationRepo.findById(1L).get()));
-        droneRepo.save(new Drone("UUID-5678", "ude af drift", stationRepo.findById(2L).get()));
+        // Generer droner
+        generateRandomDrones();
+    }
+
+    public void generateRandomDrones() {
+        // Find stationer
+        Station station1 = stationRepo.findById(1L).orElseThrow(() -> new IllegalArgumentException("Station 1 findes ikke."));
+        Station station2 = stationRepo.findById(2L).orElseThrow(() -> new IllegalArgumentException("Station 2 findes ikke."));
+        Station station3 = stationRepo.findById(3L).orElseThrow(() -> new IllegalArgumentException("Station 3 findes ikke."));
+
+        // Opret droner med tilpassede UUID'er
+        droneRepo.save(new Drone(generateCustomUUID(), "i drift", station1));
+        droneRepo.save(new Drone(generateCustomUUID(), "ude af drift", station2));
+        droneRepo.save(new Drone(generateCustomUUID(), "udfaset", station3));
+    }
+
+    private String generateCustomUUID() {
+        Random random = new Random();
+        int randomNumber = random.nextInt(9000) + 1000; // Generer et tal mellem 1000 og 9999
+        return "UUID-" + randomNumber;
     }
 }
